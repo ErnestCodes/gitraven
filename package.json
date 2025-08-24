@@ -1,0 +1,74 @@
+{
+  "name": "gitraven",
+  "version": "1.0.0",
+  "description": "AI-powered commit message generator that analyzes git changes and creates industry-standard commit messages",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "gitraven": "dist/cli.js",
+    "gr": "dist/cli.js"
+  },
+  "files": [
+    "dist/**/*",
+    "templates/**/*",
+    "README.md",
+    "LICENSE",
+    "env.example"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emeksthecreator/gitraven.git"
+  },
+  "bugs": {
+    "url": "https://github.com/emeksthecreator/gitraven/issues"
+  },
+  "homepage": "https://github.com/emeksthecreator/gitraven#readme",
+  "scripts": {
+    "build": "bun build src/cli.ts --outdir dist --target node && bun build src/index.ts --outdir dist --target node",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:all": "bun run build && bun run build:types",
+    "dev": "bun src/cli.ts",
+    "start": "bun run dist/cli.js",
+    "test": "bun test",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts",
+    "prepublishOnly": "bun run build:all && bun run test && bun run lint",
+    "prepack": "bun run build:all",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish"
+  },
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "conventional-commits",
+    "cli",
+    "automation"
+  ],
+  "author": "Nnaemeka Onukwube <ErnestCodes>",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "openai": "^4.20.1",
+    "simple-git": "^3.20.0",
+    "chalk": "^5.3.0",
+    "ora": "^7.0.1",
+    "inquirer": "^9.2.12",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.7",
+    "@types/inquirer": "^9.0.7",
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/parser": "^6.9.1",
+    "eslint": "^8.52.0",
+    "typescript": "^5.2.2",
+    "prettier": "^3.0.3",
+    "bun-types": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "bun": ">=1.0.0"
+  }
+}

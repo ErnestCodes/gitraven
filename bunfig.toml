@@ -1,0 +1,24 @@
+# Bun configuration file
+
+[install]
+# Configure package installation
+cache = true
+optional = true
+dev = true
+peer = false
+
+[install.scopes]
+# Configure scoped packages if needed
+# "@myorg" = { "url" = "https://registry.myorg.com/", "token" = "mytoken" }
+
+[test]
+# Test configuration
+coverage = false
+bail = 0
+
+[build]
+# Build configuration
+target = "node"
+format = "cjs"
+splitting = false
+minify = false

@@ -119,30 +119,16 @@ Includes error handling for expired and invalid tokens.
 
 Commit this message? (y/N) y
 ```
+### Need help? 
 
-### Package Configuration
-
-The package is configured with:
-
-- **Entry points**: CLI (`gitraven`, `gr`) and library (`dist/index.js`)
-- **TypeScript support**: Type definitions included
-- **Multiple package managers**: Works with npm, yarn, pnpm, and bun
-- **Automated testing**: CI/CD pipeline ensures quality
-- **Proper file inclusion**: Only necessary files are published
-
-### Verification
-
-After publishing, verify your package:
+help center and setup:
 
 ```bash
-# Check package info
 npm info gitraven
 
-# Test global installation
 npm install -g gitraven
 gitraven --help
 
-# Test npx usage
 npx gitraven --help
 ```
 

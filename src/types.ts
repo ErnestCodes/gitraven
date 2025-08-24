@@ -51,6 +51,10 @@ export interface GenerateOptions {
   scope?: string;
   type?: CommitType;
   interactive?: boolean;
+  autoStage?: boolean;
+  push?: boolean;
+  noPush?: boolean;
+  all?: boolean;
 }
 
 export interface AnalysisResult {

@@ -22,6 +22,10 @@ program
   .option('-s, --scope <scope>', 'Force specific scope')
   .option('-t, --type <type>', 'Force specific commit type')
   .option('-i, --interactive', 'Interactive mode with options')
+  .option('-a, --auto-stage', 'Automatically stage changes if no staged changes found')
+  .option('--push', 'Automatically push after successful commit')
+  .option('--no-push', 'Disable auto-push (overrides --push)')
+  .option('-A, --all', 'Equivalent to --auto-stage --push')
   .action(async (options) => {
     try {
       await generateCommit(options);
@@ -59,6 +63,12 @@ async function generateCommit(options: GenerateOptions) {
   const spinner = ora();
 
   try {
+    // Handle --all flag
+    if (options.all) {
+      options.autoStage = true;
+      options.push = true;
+    }
+
     spinner.start('Checking git repository...');
     const git = new GitAnalyzer();
     const isRepo = await git.isGitRepository();
@@ -71,7 +81,52 @@ async function generateCommit(options: GenerateOptions) {
     spinner.succeed('Git repository found');
 
     spinner.start('Analyzing staged changes...');
-    const gitDiff = await git.getStagedChanges();
+    let gitDiff;
+    
+    try {
+      gitDiff = await git.getStagedChanges();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('No staged changes found')) {
+        spinner.stop();
+        
+        // Check if there are unstaged changes
+        const hasUnstagedChanges = await git.hasUnstagedChanges();
+        
+        if (!hasUnstagedChanges) {
+          spinner.fail('No changes found');
+          throw new Error('No changes to commit. Working directory is clean.');
+        }
+
+        if (options.autoStage || options.all) {
+          spinner.start('Auto-staging all changes...');
+          await git.stageAllChanges();
+          spinner.succeed('All changes staged automatically');
+          
+          spinner.start('Analyzing staged changes...');
+          gitDiff = await git.getStagedChanges();
+        } else {
+          console.log(chalk.yellow('\n📁 Found unstaged changes but no staged changes.'));
+          console.log(chalk.blue('Options:'));
+          console.log(chalk.white('1. Stage changes manually: ') + chalk.green('git add .'));
+          console.log(chalk.white('2. Use auto-stage: ') + chalk.green('gitraven --auto-stage'));
+          console.log(chalk.white('3. Use auto-stage + push: ') + chalk.green('gitraven --all'));
+          
+          const shouldAutoStage = await promptForAutoStage();
+          if (shouldAutoStage) {
+            spinner.start('Staging all changes...');
+            await git.stageAllChanges();
+            spinner.succeed('All changes staged');
+            
+            spinner.start('Analyzing staged changes...');
+            gitDiff = await git.getStagedChanges();
+          } else {
+            throw new Error('No staged changes found. Please stage your changes with "git add" first.');
+          }
+        }
+      } else {
+        throw error;
+      }
+    }
 
     if (gitDiff.files.length === 0) {
       spinner.fail('No staged changes found');
@@ -138,6 +193,14 @@ async function generateCommit(options: GenerateOptions) {
 
     // Commit changes
     await commitChanges(git, formattedMessage);
+    
+    // Auto-push if requested
+    if (options.push && !options.noPush && !options.dryRun) {
+      const shouldPush = options.all || await promptForPush();
+      if (shouldPush) {
+        await pushChanges(git);
+      }
+    }
   } catch (error) {
     spinner.fail('Failed to generate commit message');
     throw error;
@@ -243,6 +306,46 @@ function formatCommitMessageForDisplay(message: string): string {
   }
 
   return formatted;
+}
+
+async function promptForAutoStage(): Promise<boolean> {
+  const { autoStage } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'autoStage',
+      message: 'Would you like to stage all changes automatically?',
+      default: true,
+    },
+  ]);
+
+  return autoStage;
+}
+
+async function promptForPush(): Promise<boolean> {
+  const { push } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'push',
+      message: 'Push changes to remote repository?',
+      default: false,
+    },
+  ]);
+
+  return push;
+}
+
+async function pushChanges(git: GitAnalyzer): Promise<void> {
+  const spinner = ora('Pushing changes to remote...').start();
+
+  try {
+    await git.pushChanges();
+    spinner.succeed('Changes pushed successfully');
+    console.log(chalk.green('\n🚀 Changes pushed to remote repository!'));
+  } catch (error) {
+    spinner.fail('Failed to push changes');
+    console.log(chalk.yellow('\nNote: You may need to push manually if this is your first push or if remote tracking is not set up.'));
+    console.log(chalk.blue('Try: ') + chalk.green('git push origin main'));
+  }
 }
 
 process.on('uncaughtException', (error) => {

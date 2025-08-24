@@ -71,6 +71,40 @@ export class GitAnalyzer {
     }
   }
 
+  async hasUnstagedChanges(): Promise<boolean> {
+    try {
+      const status = await this.git.status();
+      return (
+        status.modified.length > 0 ||
+        status.not_added.length > 0 ||
+        status.deleted.length > 0 ||
+        status.renamed.length > 0
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  async stageAllChanges(): Promise<void> {
+    try {
+      await this.git.add('.');
+    } catch (error) {
+      throw new Error(
+        `Failed to stage changes: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  async pushChanges(): Promise<void> {
+    try {
+      await this.git.push();
+    } catch (error) {
+      throw new Error(
+        `Failed to push changes: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
   private async parseDiffOutput(
     numstat: string,
     diffDetails: string,

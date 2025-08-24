@@ -56,21 +56,52 @@ bunx gitraven
 
 ## Usage
 
+### Basic Usage
 ```bash
 # Generate commit message for staged changes
 gitraven
 
-# Generate with custom prompt
-gitraven --prompt "Focus on performance improvements"
+# Auto-stage changes and generate commit (if no staged changes)
+gitraven --auto-stage
+
+# Auto-stage and auto-push (complete workflow)
+gitraven --all
 
 # Preview without committing
 gitraven --dry-run
+```
+
+### Advanced Options
+```bash
+# Generate with custom prompt for more context
+gitraven --prompt "Focus on performance improvements"
 
 # Use specific AI model
 gitraven --model gpt-4
 
-# Show help
+# Force specific commit type and scope
+gitraven --type feat --scope auth
+
+# Interactive mode with step-by-step options
+gitraven --interactive
+
+# Auto-stage changes, commit, and push to remote
+gitraven --auto-stage --push
+
+# Show all available options
 gitraven --help
+```
+
+### Workflow Examples
+```bash
+# Quick workflow: stage → commit → push
+gitraven --all
+
+# Review workflow: generate → review → commit
+gitraven --interactive
+
+# Safe workflow: preview only
+gitraven --dry-run
 ```
 
 ## Configuration
@@ -105,19 +136,43 @@ GitRaven follows the [Conventional Commits](https://www.conventionalcommits.org/
 
 ## Examples
 
-```bash
-$ git add src/auth.ts
-$ gitraven
+### Enhanced Commit Messages
+GitRaven now generates comprehensive, detailed commit messages:
 
-✨ Analyzing changes...
+```bash
+$ gitraven --all
+
+✓ Git repository found
+✓ Auto-staging all changes
+✓ Found 3 staged file(s) with 45 changes
+✓ Commit message generated
+
 📝 Generated commit message:
 
-feat(auth): implement JWT token validation
+feat(auth): implement comprehensive JWT token validation with refresh mechanism
 
-Add middleware to validate JWT tokens in protected routes.
-Includes error handling for expired and invalid tokens.
+Add robust JWT authentication middleware that validates tokens on protected routes.
+Implements automatic token refresh, proper error handling for expired tokens,
+and secure cookie-based session management. This enhances security and improves
+user experience by reducing the need for frequent re-authentication.
 
-Commit this message? (y/N) y
+Closes #123
+```
+
+### Auto-Staging Workflow
+```bash
+$ gitraven
+📁 Found unstaged changes but no staged changes.
+Options:
+1. Stage changes manually: git add .
+2. Use auto-stage: gitraven --auto-stage  
+3. Use auto-stage + push: gitraven --all
+
+Would you like to stage all changes automatically? (Y/n) y
+✓ All changes staged
+✓ Commit message generated
+✓ Changes committed successfully
+🚀 Changes pushed to remote repository!
 ```
 ### Need help? 
 

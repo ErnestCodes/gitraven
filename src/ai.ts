@@ -93,23 +93,31 @@ export class AICommitGenerator {
   }
 
   private getSystemPrompt(): string {
-    return `You are an expert at writing conventional commit messages. You must follow these rules strictly:
+    return `You are an expert at writing exceptional conventional commit messages. Follow these rules strictly:
 
-1. Use conventional commit format: type(scope): description
-2. Keep description under ${MAX_DESCRIPTION_LENGTH} characters
-3. Use present tense, imperative mood ("add" not "added" or "adds")
-4. Don't capitalize first letter of description
-5. No period at the end of description
-6. Available types: ${Object.keys(COMMIT_TYPES).join(', ')}
-7. Scope should be concise (e.g., auth, api, ui, docs)
-8. Body should explain what and why, not how
-9. Use BREAKING CHANGE: prefix for breaking changes
+1. COMPLETE DESCRIPTIONS: Write comprehensive, specific descriptions that fully explain the change
+2. Use conventional commit format: type(scope): description
+3. Keep description under ${MAX_DESCRIPTION_LENGTH} characters but make it as descriptive as possible
+4. Use present tense, imperative mood ("add" not "added" or "adds")
+5. Don't capitalize first letter of description
+6. No period at the end of description
+7. Available types: ${Object.keys(COMMIT_TYPES).join(', ')}
+8. Scope should be meaningful and specific (e.g., auth, api, ui, database, config)
+9. ALWAYS include a detailed body explaining what changed and why
+10. Body should explain the business value, problem solved, or improvement made
+11. Use BREAKING CHANGE: prefix for breaking changes
 
-Examples:
-- feat(auth): implement JWT token validation
-- fix(api): resolve null pointer exception in user service
-- docs(readme): update installation instructions
-- style(components): fix indentation in Button component`;
+QUALITY EXAMPLES:
+- feat(auth): implement comprehensive JWT token validation with refresh mechanism
+- fix(api): resolve race condition in user creation causing duplicate accounts
+- docs(api): add detailed endpoint documentation with request/response examples
+- refactor(database): optimize user query performance by adding composite indexes
+
+BODY GUIDELINES:
+- Explain the motivation for the change
+- Describe what was changed at a high level
+- Mention any side effects or important considerations
+- Reference any issues or tickets when applicable`;
   }
 
   private buildAnalysisPrompt(gitDiff: GitDiff): string {
@@ -174,15 +182,21 @@ ${gitDiff.files
       prompt += `\n\nRequired scope: ${options.scope}`;
     }
 
-    prompt += `\n\nGenerate commit message in this JSON format:
+    prompt += `\n\nGenerate a HIGH-QUALITY commit message in this JSON format:
 {
   "type": "commit type",
-  "scope": "optional scope",
-  "description": "description under ${MAX_DESCRIPTION_LENGTH} chars",
-  "body": "optional detailed explanation",
+  "scope": "specific meaningful scope",
+  "description": "comprehensive description under ${MAX_DESCRIPTION_LENGTH} chars explaining what was changed",
+  "body": "REQUIRED: detailed explanation of what changed, why it was needed, and what problem it solves. Include business context and impact.",
   "breakingChange": true/false,
-  "footer": "optional footer for issues/breaking changes"
-}`;
+  "footer": "optional footer for issues/breaking changes or additional notes"
+}
+
+REQUIREMENTS:
+- Description must be specific and complete
+- Body is REQUIRED and should be 2-4 sentences explaining the change comprehensively
+- Focus on the business value and user impact
+- Make it clear what problem this solves`;
 
     return prompt;
   }

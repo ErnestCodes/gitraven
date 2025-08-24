@@ -95,9 +95,43 @@ export class GitAnalyzer {
     }
   }
 
+  async getCurrentBranch(): Promise<string> {
+    try {
+      const branchSummary = await this.git.branch();
+      const currentBranch = branchSummary.current;
+      
+      if (!currentBranch) {
+        throw new Error('Could not determine current branch');
+      }
+      
+      return currentBranch;
+    } catch (error) {
+      throw new Error(
+        `Failed to get current branch: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
   async pushChanges(): Promise<void> {
     try {
-      await this.git.push();
+      // Get current branch name
+      const currentBranch = await this.getCurrentBranch();
+
+      // Check if remote tracking branch exists
+      const remotes = await this.git.getRemotes(true);
+      const hasOrigin = remotes.some(remote => remote.name === 'origin');
+      
+      if (!hasOrigin) {
+        throw new Error('No origin remote found');
+      }
+
+      // Try to push to the current branch
+      try {
+        await this.git.push('origin', currentBranch);
+      } catch (pushError) {
+        // If push fails, try setting upstream
+        await this.git.push('origin', currentBranch, ['--set-upstream']);
+      }
     } catch (error) {
       throw new Error(
         `Failed to push changes: ${error instanceof Error ? error.message : String(error)}`

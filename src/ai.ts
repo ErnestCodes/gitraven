@@ -95,9 +95,9 @@ export class AICommitGenerator {
   private getSystemPrompt(): string {
     return `You are an expert at writing exceptional conventional commit messages. Follow these rules strictly:
 
-1. COMPLETE DESCRIPTIONS: Write comprehensive, specific descriptions that fully explain the change
-2. Use conventional commit format: type(scope): description
-3. Keep description under ${MAX_DESCRIPTION_LENGTH} characters but make it as descriptive as possible
+1. CONCISE BUT COMPLETE TITLES: Write clear, complete descriptions that fit within the character limit
+2. Use conventional commit format: type(scope): description  
+3. Keep description under ${MAX_DESCRIPTION_LENGTH} characters - be concise but descriptive
 4. Use present tense, imperative mood ("add" not "added" or "adds")
 5. Don't capitalize first letter of description
 6. No period at the end of description
@@ -108,10 +108,10 @@ export class AICommitGenerator {
 11. Use BREAKING CHANGE: prefix for breaking changes
 
 QUALITY EXAMPLES:
-- feat(auth): implement comprehensive JWT token validation with refresh mechanism
-- fix(api): resolve race condition in user creation causing duplicate accounts
-- docs(api): add detailed endpoint documentation with request/response examples
-- refactor(database): optimize user query performance by adding composite indexes
+- feat(auth): implement JWT token validation with refresh support
+- fix(api): resolve race condition in user creation process  
+- docs(api): add endpoint documentation with examples
+- refactor(auth): remove unused import for AuthenticateWithRedirectCallback
 
 BODY GUIDELINES:
 - Explain the motivation for the change
@@ -185,18 +185,19 @@ ${gitDiff.files
     prompt += `\n\nGenerate a HIGH-QUALITY commit message in this JSON format:
 {
   "type": "commit type",
-  "scope": "specific meaningful scope",
-  "description": "comprehensive description under ${MAX_DESCRIPTION_LENGTH} chars explaining what was changed",
-  "body": "REQUIRED: detailed explanation of what changed, why it was needed, and what problem it solves. Include business context and impact.",
+  "scope": "specific meaningful scope", 
+  "description": "concise but complete description under ${MAX_DESCRIPTION_LENGTH} chars",
+  "body": "REQUIRED: 2-3 sentences explaining what changed, why it was needed, and the impact/benefit",
   "breakingChange": true/false,
-  "footer": "optional footer for issues/breaking changes or additional notes"
+  "footer": "optional footer for issues/breaking changes"
 }
 
-REQUIREMENTS:
-- Description must be specific and complete
-- Body is REQUIRED and should be 2-4 sentences explaining the change comprehensively
-- Focus on the business value and user impact
-- Make it clear what problem this solves`;
+CRITICAL REQUIREMENTS:
+- Description MUST be under ${MAX_DESCRIPTION_LENGTH} characters but complete and readable
+- DO NOT truncate words in the description - adjust wording to fit
+- Body is REQUIRED and should be concise but informative
+- Focus on what changed and why it matters
+- Avoid overly verbose descriptions in the title`;
 
     return prompt;
   }
@@ -225,20 +226,44 @@ REQUIREMENTS:
   private parseCommitResponse(content: string, analysis: AnalysisResult): CommitMessage {
     try {
       const parsed = JSON.parse(content.trim());
+      
+      // Ensure description fits within limit without truncating words
+      let description = parsed.description || analysis.summary;
+      if (description.length > MAX_DESCRIPTION_LENGTH) {
+        // Try to find a good breaking point before the limit
+        const truncateAt = description.lastIndexOf(' ', MAX_DESCRIPTION_LENGTH - 3);
+        if (truncateAt > MAX_DESCRIPTION_LENGTH * 0.7) {
+          description = description.substring(0, truncateAt) + '...';
+        } else {
+          description = description.substring(0, MAX_DESCRIPTION_LENGTH - 3) + '...';
+        }
+      }
+      
       return {
         type: parsed.type || analysis.suggestedType,
         scope: parsed.scope || analysis.suggestedScope,
-        description: parsed.description || analysis.summary,
-        body: parsed.body,
+        description: description,
+        body: parsed.body || 'Update implementation to improve code quality and maintainability.',
         footer: parsed.footer,
         breakingChange: parsed.breakingChange || analysis.breakingChange,
       };
     } catch {
       // Fallback to analysis
+      let description = analysis.summary;
+      if (description.length > MAX_DESCRIPTION_LENGTH) {
+        const truncateAt = description.lastIndexOf(' ', MAX_DESCRIPTION_LENGTH - 3);
+        if (truncateAt > MAX_DESCRIPTION_LENGTH * 0.7) {
+          description = description.substring(0, truncateAt) + '...';
+        } else {
+          description = description.substring(0, MAX_DESCRIPTION_LENGTH - 3) + '...';
+        }
+      }
+      
       return {
         type: analysis.suggestedType,
         scope: analysis.suggestedScope,
-        description: analysis.summary.substring(0, MAX_DESCRIPTION_LENGTH),
+        description: description,
+        body: 'Code changes made to improve functionality and maintainability.',
         breakingChange: analysis.breakingChange,
       };
     }

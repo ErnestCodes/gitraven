@@ -343,8 +343,22 @@ async function pushChanges(git: GitAnalyzer): Promise<void> {
     console.log(chalk.green('\n🚀 Changes pushed to remote repository!'));
   } catch (error) {
     spinner.fail('Failed to push changes');
-    console.log(chalk.yellow('\nNote: You may need to push manually if this is your first push or if remote tracking is not set up.'));
-    console.log(chalk.blue('Try: ') + chalk.green('git push origin main'));
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.log(chalk.yellow(`\n⚠️  Push failed: ${errorMessage}`));
+    
+    // Get current branch for better error message
+    try {
+      const branchInfo = await git.getCurrentBranch();
+      console.log(chalk.blue('Manual push command: ') + chalk.green(`git push origin ${branchInfo}`));
+      
+      // Check if it's a first push issue
+      if (errorMessage.includes('no upstream') || errorMessage.includes('set-upstream')) {
+        console.log(chalk.blue('Or set upstream: ') + chalk.green(`git push --set-upstream origin ${branchInfo}`));
+      }
+    } catch {
+      console.log(chalk.blue('Try manually: ') + chalk.green('git push'));
+    }
   }
 }
 

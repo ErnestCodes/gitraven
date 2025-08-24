@@ -17,12 +17,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/emeksthecreator/gitraven.git"
+    "url": "https://github.com/ErnestCodes/gitraven.git"
   },
   "bugs": {
-    "url": "https://github.com/emeksthecreator/gitraven/issues"
+    "url": "https://github.com/ErnestCodes/gitraven/issues"
   },
-  "homepage": "https://github.com/emeksthecreator/gitraven#readme",
+  "homepage": "https://github.com/ErnestCodes/gitraven#readme",
   "scripts": {
     "build": "bun build src/cli.ts --outdir dist --target node && bun build src/index.ts --outdir dist --target node",
     "build:types": "tsc --emitDeclarationOnly",

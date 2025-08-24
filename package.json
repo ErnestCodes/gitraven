@@ -1,6 +1,6 @@
 {
   "name": "gitraven",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "AI-powered commit message generator that analyzes git changes and creates industry-standard commit messages",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
